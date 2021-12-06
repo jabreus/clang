@@ -5,8 +5,8 @@ grammar Clang;
 program : include* definition+;
 
 //Includes
-include :   INCLUDE '"' (ID | PATH) '"'
-        |   INCLUDE '<' PATH '>'
+include :   '#' INCLUDE '"' (ID | PATH) '"'
+        |   '#' INCLUDE '<' PATH '>'
         ;
 
 definition  :   functionDefinition
@@ -184,7 +184,7 @@ FLOAT_CONSTANT : SIGN? ((DIGITS '.') | ('.' FRAC_PART) | (DIGITS '.' FRAC_PART) 
 
 TYPE : SHORT | INT | LONG | FLOAT | DOUBLE | CHAR;
 
-INCLUDE : '#include';
+INCLUDE : 'include';
 
 //NEW
 
