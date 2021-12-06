@@ -67,28 +67,6 @@ scanfStatement:   SCANF '(' argumentScanf ')' ;
 
 argumentScanf:  '&'?ID(',''&'?ID)*;
 
-//Firs printf
-/* printfStatement :   PRINTF '(' format ')';
-
-   format: formatString ',' argumentsList
-           |  commonStr
-           ;
-
-
-   formatString    :    FORMAT_STR;
-
-   argumentsList:  argument (','argument)*;
-
-   argument   :  CONSTANT
-              | ID
-              ;
-
-   commonStr: COMMON_STR ;
-
-   scanfStatement:   SCANF ('(' formatString',' argumentScanf ')') ;
-
-   argumentScanf:  '&'?ID(',''&'?ID)*;
-*/
 expressionList : expression ( ',' expression)* ;
 
 expression :    '(' expression ')'                                         #ExprParenthesis
@@ -146,29 +124,6 @@ CONST : 'const';
 PRINTF : 'printf';
 SCANF   :  'scanf';
 
-
-// Add char* type declarations
-
-//Rules for printf and scanf format
-/*FORMAT_STR: '"' STR_OUT? SPECIF+ STR_OUT?'"'
-         |  '"' STR_OUT? SPECIF_FLAGS+ STR_OUT? '"'
-         |  '"' STR_OUT? SPECIF_FLAGS_WIDTH+ STR_OUT? '"'
-         |  '"' STR_OUT? SPECIF_FLAGS_WIDTH_PRECI+ STR_OUT? '"'
-         |  '"' STR_OUT? SPECIF_FLAGS_WIDTH_PRECI_LEN+ STR_OUT? '"'
-         ;
-
-*/
-//PC ( (SIGN | WS | NU | Z)? (INT_CONSTANT | AS)? ('.'(INT_CONSTANT | AS))? LEN? ) SPEC;
-/*
-SPECIF:   PC SPEC ;
-SPECIF_FLAGS: PC FLAGS? SPEC;
-SPECIF_FLAGS_WIDTH: PC FLAGS? WIDTH? SPEC;
-SPECIF_FLAGS_WIDTH_PRECI: PC FLAGS? WIDTH? PRECI? SPEC;
-SPECIF_FLAGS_WIDTH_PRECI_LEN: PC FLAGS? WIDTH? PRECI? LEN? SPEC;
-*/
-//COMMON_STR: '"' STR_OUT '"';
-
-
 INT_CONSTANT :  OCT_CONSTANT
              |  HEX_CONSTANT
              |  DEC_CONSTANT
@@ -177,7 +132,6 @@ INT_CONSTANT :  OCT_CONSTANT
 CHAR_CONSTANT : '\'' '\\'?.  '\'';
 
 
-//TODO11
 STRING_LITERAL : '"' (ESC | .)*? '"';
 
 FLOAT_CONSTANT : SIGN? ((DIGITS '.') | ('.' FRAC_PART) | (DIGITS '.' FRAC_PART) | (FLOAT_WITH_E)) FLOAT_SUFFIX?;
@@ -185,8 +139,6 @@ FLOAT_CONSTANT : SIGN? ((DIGITS '.') | ('.' FRAC_PART) | (DIGITS '.' FRAC_PART) 
 TYPE : SHORT | INT | LONG | FLOAT | DOUBLE | CHAR;
 
 INCLUDE : 'include';
-
-//NEW
 
 FLAGS:  SIGN
      | NU
