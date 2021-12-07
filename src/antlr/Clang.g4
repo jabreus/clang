@@ -5,9 +5,12 @@ grammar Clang;
 program : include* definition+;
 
 //Includes
-include :   '#' INCLUDE '"' (ID | PATH) '"'
-        |   '#' INCLUDE '<' PATH '>'
+include :   '#' INCLUDE WITH_QUOTES
+        |   '#' INCLUDE WITH_ANGLE_BRACKETS
         ;
+
+WITH_QUOTES: '"' (ID | PATH) '"' ;
+WITH_ANGLE_BRACKETS: '<' PATH '>';
 
 definition  :   functionDefinition
             |   functionDeclaration
@@ -100,7 +103,7 @@ assignmentExpression : unaryExpression assignmentOperator expression;
 unaryExpression : ID | arrayIndexExpression;
 arrayIndexExpression:  ID '[' expression ']'  ;
 
-assignmentOperator: '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '&=' | '^=' | '|=' |;
+assignmentOperator: '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '&=' | '^=' | '|=';
 
 conditionalExpression : expression
             |   expression '?' expression ':' conditionalExpression;
