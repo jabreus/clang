@@ -87,6 +87,7 @@ expression :    '(' expression ')'                                         #Expr
             |   constant                                                   #ExprCnt
             |   ID                                                         #ExprId
             |   assignmentExpression                                       #ExprAssignment
+            |   expression '?' expression ':' expression                   #TernaryExpression
             ;
 
 constant    :  INT_CONSTANT                                                #IntCnt
@@ -105,9 +106,6 @@ arrayIndexExpression:  ID '[' expression ']'  ;
 
 assignmentOperator: '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '&=' | '^=' | '|=';
 
-conditionalExpression : expression
-            |   expression '?' expression ':' conditionalExpression;
-
 ifStatement : IF '(' expression ')' (';' | statement) (ELSE (';' | statement ))?;
 
 whileStatement : WHILE '(' expression ')' (';' | statement) ;
@@ -116,6 +114,7 @@ forStatement : FOR '(' expressionList? ';' condExpression? ';' iterExpression? '
 
 condExpression: expression;
 iterExpression: expression;
+
 
 
 // Scanner rules
