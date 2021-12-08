@@ -17,7 +17,7 @@ definition  :   functionDefinition
             |   declaration
             ;
 
-declaration :   TYPE (varWithExpDeclaration | varWithoutExpDeclaration) (',' (varWithoutExpDeclaration |varWithExpDeclaration))* ';'        #VarDeclaration
+declaration :   TYPE POINTER? (varWithExpDeclaration | varWithoutExpDeclaration) (',' (varWithoutExpDeclaration |varWithExpDeclaration))* ';'        #VarDeclaration
 
             |   TYPE ID '[' expression ']' (',' ID '[' expression ']')* ';'                                                                 #ArrayDeclaration
             ;
@@ -25,7 +25,6 @@ declaration :   TYPE (varWithExpDeclaration | varWithoutExpDeclaration) (',' (va
 varWithExpDeclaration:   ID  '=' expression ;
 
 varWithoutExpDeclaration:     ID ;
-
 
 
 functionDeclaration : (TYPE | 'void') ID '(' (parameterList | typeList)? ')' ';'; // int max(int a, int b); o int f(int, double);
@@ -152,6 +151,8 @@ WIDTH:  INT_CONSTANT
      ;
 
 PRECI:  '.'WIDTH;
+
+POINTER: ('*' | '**') ;
 
 //Data types
 INT : 'int';
