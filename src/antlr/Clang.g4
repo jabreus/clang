@@ -9,12 +9,10 @@ include :   '#' INCLUDE WITH_QUOTES
         |   '#' INCLUDE WITH_ANGLE_BRACKETS
         ;
 
-WITH_QUOTES: '"' (ID | PATH) '"' ;
-WITH_ANGLE_BRACKETS: '<' PATH '>';
-
 definition  :   functionDefinition
             |   functionDeclaration
             |   declaration
+            |   assignmentExpression
             ;
 
 declaration :   TYPE ('*'|'**')? (varWithExpDeclaration | varWithoutExpDeclaration) (',' (varWithoutExpDeclaration |varWithExpDeclaration))* ';'        #VarDeclaration
@@ -22,12 +20,12 @@ declaration :   TYPE ('*'|'**')? (varWithExpDeclaration | varWithoutExpDeclarati
             |   TYPE ID '[' expression ']' (',' ID '[' expression ']')* ';'                                                                 #ArrayDeclaration
             ;
 
-varWithExpDeclaration:   ID  '=' expression ;
+varWithExpDeclaration: ID  '=' SIGN? expression ;
 
 varWithoutExpDeclaration:     ID ;
 
 
-functionDeclaration : (TYPE | 'void') ID '(' (parameterList | typeList)? ')' ';'; // int max(int a, int b); o int f(int, double);
+functionDeclaration : (TYPE | 'void') ID '(' (STRING_LITERAL | parameterList | typeList)? ')' ';'; // int max(int a, int b); o int f(int, double);
 
 functionDefinition  : (TYPE | 'void') ID '(' parameterList? ')' '{' statementCombination '}'; // int max(int a, int b){ return a>b?a:b;}
 
@@ -63,30 +61,33 @@ returnStatement :   'return' expression?;
 breakStatement  :   BREAK | CONTINUE;
 
 
-printfStatement :   PRINTF '('  expression  ')';
+printfStatement :   PRINTF '('  printArgument  ')';
+
+//TODO
+printArgument : expression;
 
 scanfStatement:   SCANF '(' argumentScanf ')' ;
 
-argumentScanf:  '&'?ID(',''&'?ID)*;
+argumentScanf: SCANF_CONVERSION_SPECIFICATION ',' '&'?ID(',''&'?ID)* ;
 
 expressionList : expression ( ',' expression)* ;
 
-expression :    '(' expression ')'                                         #ExprParenthesis
-            |   functionCall                                               #ExprFunctionCall
+expression :    '(' expression ')'                                              #ExprParenthesis
+            |   functionCall                                                    #ExprFunctionCall
 
-            |   arrayIndexExpression                                       #ExprArrayIndex
-            |   left=expression op=('*'|'/'|'%') right=expression          #ExprArit
-            |   left=expression op=('+'|'-') right=expression              #ExprArit
-            |   left=expression op=('>'|'>='|'<'|'<=') right=expression    #ExprRel
-            |   left=expression op=('=='|'!=')  right=expression           #ExprRel
-            |   expression '&&' expression                                 #ExprAnd
-            |   expression '||' expression                                 #ExprOr
-            |   unaryOperator=('+'|'-'|'++'|'--'|'~'|'!') ID               #ExprUnaryOpPost
-            |   ID unaryOperator=('++'|'--')                               #ExprUnaryOpPre
-            |   constant                                                   #ExprCnt
-            |   ID                                                         #ExprId
-            |   assignmentExpression                                       #ExprAssignment
-            |   expression '?' expression ':' expression                   #TernaryExpression
+            |   arrayIndexExpression                                            #ExprArrayIndex
+            |   left=expression op=('*'|'/'|'%') right=expression               #ExprArit
+            |   left=expression op=('+'|'-') right=expression                   #ExprArit
+            |   left=expression op=('>'|'>='|'<'|'<=') right=expression         #ExprRel
+            |   left=expression op=('=='|'!=')  right=expression                #ExprRel
+            |   expression '&&' expression                                      #ExprAnd
+            |   expression '||' expression                                      #ExprOr
+            |   unaryOperator=('+'|'-'|'++'|'--'|'~'|'!')(INT_CONSTANT | ID)    #ExprUnaryOpPost
+            |   ID unaryOperator=('++'|'--')                                    #ExprUnaryOpPre
+            |   constant                                                        #ExprCnt
+            |   ID                                                              #ExprId
+            |   assignmentExpression                                            #ExprAssignment
+            |   expression '?' expression ':' expression                        #TernaryExpression
             ;
 
 constant    :  INT_CONSTANT                                                #IntCnt
@@ -132,6 +133,7 @@ INT_CONSTANT :  OCT_CONSTANT
 
 CHAR_CONSTANT : '\'' '\\'?.  '\'';
 
+SCANF_CONVERSION_SPECIFICATION : '"' ('%Lf' | '%lf' | '%f' | '%lu' | '%ld' | '%u' | '%d' | '%hd' | '%c')+ '"';
 
 STRING_LITERAL : '"' (ESC | .)*? '"';
 
@@ -140,6 +142,9 @@ FLOAT_CONSTANT : SIGN? ((DIGITS '.') | ('.' FRAC_PART) | (DIGITS '.' FRAC_PART) 
 TYPE : SHORT | INT | LONG | FLOAT | DOUBLE | CHAR;
 
 INCLUDE : 'include';
+
+WITH_QUOTES: '"' (ID | PATH) '"' ;
+WITH_ANGLE_BRACKETS: '<' PATH '>';
 
 FLAGS:  SIGN
      | NU
@@ -151,6 +156,7 @@ WIDTH:  INT_CONSTANT
      ;
 
 PRECI:  '.'WIDTH;
+
 
 //Data types
 INT : 'int';
