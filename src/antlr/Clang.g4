@@ -17,7 +17,7 @@ definition  :   functionDefinition
             |   declaration
             ;
 
-declaration :   TYPE POINTER? (varWithExpDeclaration | varWithoutExpDeclaration) (',' (varWithoutExpDeclaration |varWithExpDeclaration))* ';'        #VarDeclaration
+declaration :   TYPE ('*'|'**')? (varWithExpDeclaration | varWithoutExpDeclaration) (',' (varWithoutExpDeclaration |varWithExpDeclaration))* ';'        #VarDeclaration
 
             |   TYPE ID '[' expression ']' (',' ID '[' expression ']')* ';'                                                                 #ArrayDeclaration
             ;
@@ -151,8 +151,6 @@ WIDTH:  INT_CONSTANT
      ;
 
 PRECI:  '.'WIDTH;
-
-POINTER: ('*' | '**') ;
 
 //Data types
 INT : 'int';
