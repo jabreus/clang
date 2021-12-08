@@ -61,10 +61,12 @@ returnStatement :   'return' expression?;
 breakStatement  :   BREAK | CONTINUE;
 
 
-printfStatement :   PRINTF '('  printArgument  ')';
+printfStatement :   PRINTF '(' printArgument ')';
 
 //TODO
-printArgument : expression;
+printArgument :expression | STRING_LITERAL | (STRING_LITERAL ',' expression);
+
+
 
 scanfStatement:   SCANF '(' argumentScanf ')' ;
 
@@ -240,7 +242,7 @@ fragment
 HEX_DIGIT : ([A-F]|[a-f]|DIGIT)+;
 
 fragment
-LETTER : [a-zA-Z];
+LETTER : [_a-zA-Z];
 
 fragment
 LET_DIGIT : DIGIT | LETTER;
