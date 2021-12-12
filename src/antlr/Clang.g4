@@ -15,7 +15,7 @@ definition  :   functionDefinition
             |   assignmentExpression
             ;
 
-declaration :   TYPE ('*'|'**')? (varWithExpDeclaration | varWithoutExpDeclaration) (',' (varWithoutExpDeclaration |varWithExpDeclaration))* ';'        #VarDeclaration
+declaration : TYPE ('*'|'**')? (varWithExpDeclaration | varWithoutExpDeclaration) (',' (varWithoutExpDeclaration |varWithExpDeclaration))* ';'        #VarDeclaration
 
             |   TYPE ID '[' expression ']' (',' ID '[' expression ']')* ';'                                                                 #ArrayDeclaration
             ;
@@ -41,6 +41,7 @@ statement :     compoundStatement
             |   expression ';'
             |   declaration
 			|   ifStatement
+			|   switchStatement
 			|   whileStatement
 			|   forStatement
 			|   returnStatement ';'
@@ -78,7 +79,7 @@ expression :    '(' expression ')'                                              
             |   functionCall                                                    #ExprFunctionCall
 
             |   arrayIndexExpression                                            #ExprArrayIndex
-            |   left=expression op=('*'|'/'|'%') right=expression               #ExprArit
+            |   left=expression op=('*'|'/'|'%') right= expression              #ExprArit
             |   left=expression op=('+'|'-') right=expression                   #ExprArit
             |   left=expression op=('>'|'>='|'<'|'<=') right=expression         #ExprRel
             |   left=expression op=('=='|'!=')  right=expression                #ExprRel
@@ -87,7 +88,8 @@ expression :    '(' expression ')'                                              
             |   unaryOperator=('+'|'-'|'++'|'--'|'~'|'!')(INT_CONSTANT | ID)    #ExprUnaryOpPost
             |   ID unaryOperator=('++'|'--')                                    #ExprUnaryOpPre
             |   constant                                                        #ExprCnt
-            |   ID                                                              #ExprId
+            |   ('&'|'*') ? ID                                                  #ExprId
+            |   CAST? ID                                                        #ExprCast
             |   assignmentExpression                                            #ExprAssignment
             |   expression '?' expression ':' expression                        #TernaryExpression
             ;
@@ -101,7 +103,7 @@ constant    :  INT_CONSTANT                                                #IntC
 
 functionCall : ID '(' expressionList? ')' ;
 
-assignmentExpression : unaryExpression assignmentOperator expression;
+assignmentExpression : unaryExpression assignmentOperator CAST? expression;
 
 unaryExpression : ID | arrayIndexExpression;
 arrayIndexExpression:  ID '[' expression ']'  ;
@@ -114,6 +116,21 @@ whileStatement : WHILE '(' expression ')' (';' | statement) ;
 
 forStatement : FOR '(' expressionList? ';' condExpression? ';' iterExpression? ')' (';' | statement) ;
 
+switchStatement : SWITCH '(' ID ')' '{' cases '}' ;
+
+cases: (((CASE (CHAR_CONSTANT | INT_CONSTANT)) | DEFAULT) ':' cases | switch_actions ';')+;
+
+switch_actions : expression
+                | printfStatement
+                | scanfStatement
+                | forStatement
+                | whileStatement
+                | ifStatement
+                | switchStatement
+                | breakStatement
+                | returnStatement
+                ;
+
 condExpression: expression;
 iterExpression: expression;
 
@@ -123,6 +140,9 @@ iterExpression: expression;
 WHILE : 'while';
 IF : 'if';
 ELSE : 'else';
+SWITCH: 'switch';
+CASE: 'case';
+DEFAULT: 'default';
 FOR : 'for';
 CONST : 'const';
 PRINTF : 'printf';
@@ -142,6 +162,8 @@ STRING_LITERAL : '"' (ESC | .)*? '"';
 FLOAT_CONSTANT : SIGN? ((DIGITS '.') | ('.' FRAC_PART) | (DIGITS '.' FRAC_PART) | (FLOAT_WITH_E)) FLOAT_SUFFIX?;
 
 TYPE : SHORT | INT | LONG | FLOAT | DOUBLE | CHAR;
+
+CAST: '(' TYPE ')' ;
 
 INCLUDE : 'include';
 
