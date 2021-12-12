@@ -46,8 +46,10 @@ statement :     compoundStatement
 			|   forStatement
 			|   returnStatement ';'
 			|   breakStatement ';'
-			|   printfStatement ';'
-			|   scanfStatement ';'
+			|   printfFunction ';'
+			|   scanfFunction ';'
+			|   sqrtFunction ';'
+			|   powFunction ';'
 			;
 
 compoundStatement :     '{' '}'
@@ -61,17 +63,24 @@ returnStatement :   'return' expression?;
 
 breakStatement  :   BREAK | CONTINUE;
 
+//C Functions:
 
-printfStatement :   PRINTF '(' printArgument ')';
-
-//TODO
+//Printf
+printfFunction :   PRINTF '(' printArgument ')';
 printArgument :expression | STRING_LITERAL | (STRING_LITERAL ',' expression);
 
-
-
-scanfStatement:   SCANF '(' argumentScanf ')' ;
-
+//Scanf
+scanfFunction:   SCANF '(' argumentScanf ')' ;
 argumentScanf: SCANF_CONVERSION_SPECIFICATION ',' '&'?ID(',''&'?ID)* ;
+
+//Sqrt
+sqrtFunction : SQRT '(' argumentSqrt ')' ;
+argumentSqrt : ID | DOUBLE_CONSTANT | CHAR_CONSTANT;
+
+//Pow
+powFunction : POW '(' argumentPow ')' ;
+argumentPow : (ID | DOUBLE_CONSTANT | CHAR_CONSTANT) ',' (ID | DOUBLE_CONSTANT | CHAR_CONSTANT);
+
 
 expressionList : expression ( ',' expression)* ;
 
@@ -98,6 +107,7 @@ constant    :  INT_CONSTANT                                                #IntC
             |  CHAR_CONSTANT                                               #CharCnt
             |  FLOAT_CONSTANT                                              #FloatCnt
             |  STRING_LITERAL                                              #StrLCnt
+            |  DOUBLE_CONSTANT                                             #DOubleCnt
             ;
 
 
@@ -121,8 +131,10 @@ switchStatement : SWITCH '(' ID ')' '{' cases '}' ;
 cases: (((CASE (CHAR_CONSTANT | INT_CONSTANT)) | DEFAULT) ':' cases | switch_actions ';')+;
 
 switch_actions : expression
-                | printfStatement
-                | scanfStatement
+                | printfFunction
+                | scanfFunction
+                | sqrtFunction
+                | powFunction
                 | forStatement
                 | whileStatement
                 | ifStatement
@@ -147,13 +159,19 @@ FOR : 'for';
 CONST : 'const';
 PRINTF : 'printf';
 SCANF   :  'scanf';
+SQRT : 'sqrt';
+POW : 'pow';
+
+DOUBLE_CONSTANT : DIGITS | (DIGITS '.' DIGITS) ;
 
 INT_CONSTANT :  OCT_CONSTANT
              |  HEX_CONSTANT
              |  DEC_CONSTANT
              ;
 
+
 CHAR_CONSTANT : '\'' '\\'?.  '\'';
+
 
 SCANF_CONVERSION_SPECIFICATION : '"' ('%Lf' | '%lf' | '%f' | '%lu' | '%ld' | '%u' | '%d' | '%hd' | '%c')+ '"';
 
