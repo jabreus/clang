@@ -2,17 +2,21 @@ grammar Clang;
 
 // Parser rules
 
-program : include* definition+;
+program : (include | define)* definition+;
 
 //Includes
 include :   '#' INCLUDE WITH_QUOTES
         |   '#' INCLUDE WITH_ANGLE_BRACKETS
         ;
 
+define : DEFINE ID (INT_CONSTANT | DOUBLE_CONSTANT | FLOAT_CONSTANT | CHAR_CONSTANT | STRING_LITERAL);
+
 definition  :   functionDefinition
             |   functionDeclaration
             |   declaration
             |   assignmentExpression
+            |   struct
+            |   union
             ;
 
 declaration : TYPE ('*'|'**')? (varWithExpDeclaration | varWithoutExpDeclaration) (',' (varWithoutExpDeclaration |varWithExpDeclaration))* ';'        #VarDeclaration
@@ -71,7 +75,7 @@ printArgument :expression | STRING_LITERAL | (STRING_LITERAL ',' expression);
 
 //Scanf
 scanfFunction:   SCANF '(' argumentScanf ')' ;
-argumentScanf: SCANF_CONVERSION_SPECIFICATION ',' '&'?ID(',''&'?ID)* ;
+argumentScanf: SCANF_CONVERSION_SPECIFICATION ',' '&'ID(',''&'ID)* ;
 
 //Sqrt
 sqrtFunction : SQRT '(' argumentSqrt ')' ;
@@ -146,6 +150,10 @@ switch_actions : expression
 condExpression: expression;
 iterExpression: expression;
 
+struct: STRUCT ID '{' (declaration)+ '}'(ID (',' ID)*)? ';';
+
+union: UNION '{' (declaration)+ '}' (ID (',' ID)*)? ';' ;
+
 
 
 // Scanner rules
@@ -162,20 +170,19 @@ SCANF   :  'scanf';
 SQRT : 'sqrt';
 POW : 'pow';
 
-DOUBLE_CONSTANT : DIGITS | (DIGITS '.' DIGITS) ;
 
 INT_CONSTANT :  OCT_CONSTANT
              |  HEX_CONSTANT
              |  DEC_CONSTANT
              ;
 
+DOUBLE_CONSTANT : DIGITS | (DIGITS '.' DIGITS) ;
 
 CHAR_CONSTANT : '\'' '\\'?.  '\'';
 
 
 SCANF_CONVERSION_SPECIFICATION : '"' ('%Lf' | '%lf' | '%f' | '%lu' | '%ld' | '%u' | '%d' | '%hd' | '%c')+ '"';
 
-STRING_LITERAL : '"' (ESC | .)*? '"';
 
 FLOAT_CONSTANT : SIGN? ((DIGITS '.') | ('.' FRAC_PART) | (DIGITS '.' FRAC_PART) | (FLOAT_WITH_E)) FLOAT_SUFFIX?;
 
@@ -184,6 +191,7 @@ TYPE : SHORT | INT | LONG | FLOAT | DOUBLE | CHAR;
 CAST: '(' TYPE ')' ;
 
 INCLUDE : 'include';
+DEFINE: 'define' ;
 
 WITH_QUOTES: '"' (ID | PATH) '"' ;
 WITH_ANGLE_BRACKETS: '<' PATH '>';
@@ -209,6 +217,12 @@ CHAR : 'char';
 SHORT : 'short';
 LONG : 'long';
 
+//Estructures
+STRUCT: 'struct' ;
+
+//Unions
+UNION: 'union' ;
+
 //Jump statements
 BREAK : 'break';
 CONTINUE : 'continue';
@@ -221,6 +235,7 @@ ID :    LETTER LET_DIGIT*;
 PATH : ID '.' ID;
 //new fragment added to the var declaration
 
+STRING_LITERAL : '"' (ESC | .)*? '"';
 
 fragment
 PC  :   '%';
