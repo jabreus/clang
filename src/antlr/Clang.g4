@@ -130,9 +130,11 @@ whileStatement : WHILE '(' expression ')' (';' | statement) ;
 
 forStatement : FOR '(' expressionList? ';' condExpression? ';' iterExpression? ')' (';' | statement) ;
 
-switchStatement : SWITCH '(' ID ')' '{' cases '}' ;
+switchStatement : SWITCH '(' expression ')' '{' cases default?'}' ;
 
-cases: (((CASE (CHAR_CONSTANT | INT_CONSTANT)) | DEFAULT) ':' cases | switch_actions ';')+;
+cases: (((CASE (CHAR_CONSTANT | INT_CONSTANT))) ':' cases | switch_actions ';')+;
+
+default : DEFAULT ':' (cases | switch_actions);
 
 switch_actions : expression
                 | printfFunction
