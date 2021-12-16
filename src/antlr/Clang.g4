@@ -5,7 +5,7 @@ grammar Clang;
 program : (include | define)* definition+;
 
 //Includes
-include :   '#' INCLUDE WITH_QUOTES
+include :   '#' INCLUDE STRING_LITERAL
         |   '#' INCLUDE WITH_ANGLE_BRACKETS
         ;
 
@@ -21,25 +21,26 @@ definition  :   functionDefinition
 
 declaration : TYPE ('*'|'**')? (varWithExpDeclaration | varWithoutExpDeclaration) (',' (varWithoutExpDeclaration |varWithExpDeclaration))* ';'        #VarDeclaration
 
-            |   TYPE ID '[' expression ']' (',' ID '[' expression ']')* ';'                                                                 #ArrayDeclaration
+            |   TYPE ID '[' expression ']' (',' ID '[' expression ']')* ';'                                                                           #ArrayDeclaration
             ;
 
 varWithExpDeclaration: ID  '=' SIGN? expression ;
 
-varWithoutExpDeclaration:     ID ;
+varWithoutExpDeclaration: ID ;
 
-
-functionDeclaration : (TYPE | 'void') ID '(' (STRING_LITERAL | parameterList | typeList)? ')' ';'; // int max(int a, int b); o int f(int, double);
+functionDeclaration : (TYPE | 'void') ID '(' (typeList | STRING_LITERAL | parameterList)? ')' ';'; // int max(int a, int b); o int f(int, double);
 
 functionDefinition  : (TYPE | 'void') ID '(' parameterList? ')' '{' statementCombination '}'; // int max(int a, int b){ return a>b?a:b;}
 
 parameterList : parameterDeclaration ( ',' parameterDeclaration)*; // int a, int b
 
-parameterDeclaration : TYPE ID ; // int a
+parameterDeclaration : TYPE ('*'|'**')? ID ('['']')? ; // int a
 
-typeList : TYPE ( ',' TYPE)*; //int, double
+typeList : TYPE (',' TYPE)*;   //int, double
 
 statementCombination: statement*;
+
+cast: '(' TYPE ')' ;
 
 statement :     compoundStatement
             |   expression ';'
@@ -54,6 +55,7 @@ statement :     compoundStatement
 			|   scanfFunction ';'
 			|   sqrtFunction ';'
 			|   powFunction ';'
+			|   sizeOfFunction ';'
 			;
 
 compoundStatement :     '{' '}'
@@ -71,26 +73,31 @@ breakStatement  :   BREAK | CONTINUE;
 
 //Printf
 printfFunction :   PRINTF '(' printArgument ')';
-printArgument :expression | STRING_LITERAL | (STRING_LITERAL ',' expression);
+printArgument :expression | STRING_LITERAL (',' expression)*;
 
 //Scanf
-scanfFunction:   SCANF '(' argumentScanf ')' ;
-argumentScanf: SCANF_CONVERSION_SPECIFICATION ',' '&'ID(',''&'ID)* ;
+scanfFunction:   SCANF '(' scanfArgument ')' ;
+scanfArgument: SCANF_CONVERSION_SPECIFICATION ',' '&'ID(',''&'ID)* ;
 
 //Sqrt
-sqrtFunction : SQRT '(' argumentSqrt ')' ;
-argumentSqrt : ID | DOUBLE_CONSTANT | CHAR_CONSTANT;
+sqrtFunction : SQRT '(' sqrtArgument ')' ;
+sqrtArgument : ID | DOUBLE_CONSTANT | CHAR_CONSTANT;
 
 //Pow
-powFunction : POW '(' argumentPow ')' ;
-argumentPow : (ID | DOUBLE_CONSTANT | CHAR_CONSTANT) ',' (ID | DOUBLE_CONSTANT | CHAR_CONSTANT);
+powFunction : POW '(' powArgument ')' ;
+powArgument : (ID | DOUBLE_CONSTANT | CHAR_CONSTANT) ',' (ID | DOUBLE_CONSTANT | CHAR_CONSTANT);
 
+//Sizeof
+sizeOfFunction: SIZEOF '(' sizeOfArgument ')' ;
+sizeOfArgument: (TYPE | ID);
+
+c_functions: printfFunction | scanfFunction | powFunction | sqrtFunction | sizeOfFunction ;
 
 expressionList : expression ( ',' expression)* ;
 
 expression :    '(' expression ')'                                              #ExprParenthesis
             |   functionCall                                                    #ExprFunctionCall
-
+            |   c_functions                                                     #ExpC_FunctionCall
             |   arrayIndexExpression                                            #ExprArrayIndex
             |   left=expression op=('*'|'/'|'%') right= expression              #ExprArit
             |   left=expression op=('+'|'-') right=expression                   #ExprArit
@@ -102,8 +109,9 @@ expression :    '(' expression ')'                                              
             |   ID unaryOperator=('++'|'--')                                    #ExprUnaryOpPre
             |   constant                                                        #ExprCnt
             |   ('&'|'*') ? ID                                                  #ExprId
-            |   CAST? ID                                                        #ExprCast
+            |   cast? ID                                                        #ExprCast
             |   assignmentExpression                                            #ExprAssignment
+            |   arrayAssigmentExpression                                        #ExpArrayAssigment
             |   expression '?' expression ':' expression                        #TernaryExpression
             ;
 
@@ -117,12 +125,15 @@ constant    :  INT_CONSTANT                                                #IntC
 
 functionCall : ID '(' expressionList? ')' ;
 
-assignmentExpression : unaryExpression assignmentOperator CAST? expression;
+assignmentExpression : unaryExpression assignmentOperator cast? expression;
 
 unaryExpression : ID | arrayIndexExpression;
-arrayIndexExpression:  ID '[' expression ']'  ;
+arrayIndexExpression:  ID '[' expression ']' ;
 
-assignmentOperator: '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '&=' | '^=' | '|=';
+arrayAssigmentExpression: TYPE ID '[' INT_CONSTANT? ']' '=' '{' ((DOUBLE_CONSTANT | CHAR_CONSTANT | STRING_LITERAL | INT_CONSTANT) | ((DOUBLE_CONSTANT | CHAR_CONSTANT | STRING_LITERAL | INT_CONSTANT)  ','))* '}' ;
+
+
+assignmentOperator: ('=' | '*=' | '/=' | '%=' | '+=' | '-=' | '&=' | '^=' | '|=');
 
 ifStatement : IF '(' expression ')' (';' | statement) (ELSE (';' | statement ))?;
 
@@ -141,6 +152,7 @@ switch_actions : expression
                 | scanfFunction
                 | sqrtFunction
                 | powFunction
+                | sizeOfFunction
                 | forStatement
                 | whileStatement
                 | ifStatement
@@ -171,14 +183,14 @@ PRINTF : 'printf';
 SCANF   :  'scanf';
 SQRT : 'sqrt';
 POW : 'pow';
+SIZEOF: 'sizeof';
 
+DOUBLE_CONSTANT : DIGITS | (DIGITS '.' DIGITS) ;
 
 INT_CONSTANT :  OCT_CONSTANT
              |  HEX_CONSTANT
              |  DEC_CONSTANT
              ;
-
-DOUBLE_CONSTANT : DIGITS | (DIGITS '.' DIGITS) ;
 
 CHAR_CONSTANT : '\'' '\\'?.  '\'';
 
@@ -190,13 +202,9 @@ FLOAT_CONSTANT : SIGN? ((DIGITS '.') | ('.' FRAC_PART) | (DIGITS '.' FRAC_PART) 
 
 TYPE : SHORT | INT | LONG | FLOAT | DOUBLE | CHAR;
 
-CAST: '(' TYPE ')' ;
-
 INCLUDE : 'include';
 DEFINE: 'define' ;
 
-WITH_QUOTES: '"' (ID | PATH) '"' ;
-WITH_ANGLE_BRACKETS: '<' PATH '>';
 
 FLAGS:  SIGN
      | NU
@@ -235,9 +243,10 @@ DEC_OPERATOR : '--';
 ID :    LETTER LET_DIGIT*;
 
 PATH : ID '.' ID;
-//new fragment added to the var declaration
 
 STRING_LITERAL : '"' (ESC | .)*? '"';
+
+WITH_ANGLE_BRACKETS: '<' PATH '>';
 
 fragment
 PC  :   '%';
@@ -297,6 +306,8 @@ DIGITS : DIGIT+;
 
 fragment
 HEX_DIGIT : ([A-F]|[a-f]|DIGIT)+;
+
+
 
 fragment
 LETTER : [_a-zA-Z];
